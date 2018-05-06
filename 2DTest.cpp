@@ -2,10 +2,12 @@
 #include "2DTest.h"
 
 
-#define Rectangle_(hdc, r) Rectangle(hdc, r.left, r.top, r.right, r.bottom)
+/*#define Rectangle_(hdc, r) Rectangle(hdc, r.left, r.top, r.right, r.bottom)
 #define Ellipse_(hdc, r)   Ellipse(hdc, r.left, r.top, r.right, r.bottom)
 #define Line_(hdc, r)   {MoveToEx(hdc, r.left, r.top, NULL); LineTo(hdc, r.right, r.bottom);}
-
+*/
+#define Line_(hdc, x1, y1, x2, y2)   {MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, x2, y2);}
+#define arrlen(a) (sizeof(a)/sizeof(a[0]))
 
 
 
@@ -14,6 +16,11 @@
 #define WINDOW_WIDTH 1000
 #define WINDOW_HEIGHT 700
 
+
+#define DRAW_LEFT 4
+#define DRAW_TOP 26
+#define DRAW_RIGHT (WINDOW_WIDTH-12)
+#define DRAW_BOTTOM (WINDOW_HEIGHT-30)
 
 
 
@@ -167,6 +174,7 @@ void DrawDurations(HDC hdc)
 {
     TCHAR Str1[100];
 
+    /*
     _tcscpy_s(Str1, _T("Общее время отрисовки:"));
     TextOut(hdc, 5, 4, Str1, _tcslen(Str1));
     _sntprintf_s(Str1, _countof(Str1), _T("%.6f"), MedianTotal);
@@ -190,6 +198,12 @@ void DrawDurations(HDC hdc)
     _sntprintf_s(Str1, _countof(Str1), _T("%.6f"), Median3);
     _tcscat_s(Str1, _T(" мсек"));
     TextOut(hdc, 250, 8+3*15, Str1, _tcslen(Str1));
+    */
+    _tcscpy_s(Str1, _T("Время отрисовки линий:"));
+    TextOut(hdc, 5, 4, Str1, _tcslen(Str1));
+    _sntprintf_s(Str1, _countof(Str1), _T("%.6f"), Median3);
+    _tcscat_s(Str1, _T(" мсек"));
+    TextOut(hdc, 250, 4, Str1, _tcslen(Str1));
 }
 
 
@@ -197,6 +211,7 @@ void DrawDurations(HDC hdc)
 void DrawShapes(HWND hWnd)
 {
     HDC hdc;
+    /*
     double ElapsedTimeTotal = 0;
     double ElapsedTime1 = 0;
     double ElapsedTime2 = 0;
@@ -259,6 +274,43 @@ void DrawShapes(HWND hWnd)
     DrawDurations(hdc);
 
     ReleaseDC(hWnd, hdc);
+    */
+
+    double ElapsedTime3 = 0;
+    LARGE_INTEGER Frequency;
+    LARGE_INTEGER StartTime3, EndTime3;
+    int x,y;
+    COLORREF PenColor[] = {RGB(0,0,0), RGB(255,0,0), RGB(0,0,255)};
+    int i;
+    RECT r = {DRAW_LEFT, DRAW_TOP, DRAW_RIGHT, DRAW_BOTTOM};
+
+
+    if (!(hdc = GetDC(hWnd))) return;
+
+    SelectObject(hdc, GetStockObject(DC_PEN));
+    FillRect(hdc, &r, (HBRUSH) (COLOR_WINDOW+1));
+    
+    QueryPerformanceFrequency(&Frequency);
+
+    QueryPerformanceCounter(&StartTime3);
+    for (i = 0; i < arrlen(PenColor); i++)
+    {
+        SetDCPenColor(hdc, PenColor[i]);
+        for (y = DRAW_TOP; y < DRAW_BOTTOM; y+=4) Line_(hdc, DRAW_LEFT, y, DRAW_RIGHT, y);
+        for (x = DRAW_LEFT; x < DRAW_RIGHT; x+=4) Line_(hdc, x, DRAW_TOP, x, DRAW_BOTTOM);
+    }
+    QueryPerformanceCounter(&EndTime3);
+
+    ElapsedTime3 = (EndTime3.QuadPart - StartTime3.QuadPart) * 1000.0 / Frequency.QuadPart;
+
+    ElapsedTime3Array.push_back(ElapsedTime3);
+    std::nth_element(ElapsedTime3Array.begin(), ElapsedTime3Array.begin() + ElapsedTime3Array.size()/2, ElapsedTime3Array.end());
+    Median3 = ElapsedTime3Array[ElapsedTime3Array.size() / 2];
+
+    DrawDurations(hdc);
+
+    ReleaseDC(hWnd, hdc);
+
 }
 
     
