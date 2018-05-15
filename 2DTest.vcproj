@@ -381,6 +381,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\Stat.h"
+				>
+			</File>
+			<File
 				RelativePath=".\stdafx.h"
 				>
 			</File>
