@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "2DTest.h"
 #include "Stat.h"
+#include "version.h"
 
 
 
@@ -60,7 +61,8 @@
 
 HINSTANCE hInst;
 HWND hMainWnd;
-TCHAR szTitle[MAX_LOADSTRING] = _T("2DTest");
+//TCHAR szTitle[MAX_LOADSTRING] = _T("2DTest");
+TCHAR szTitle[MAX_LOADSTRING] = _T(VER_PRODUCTNAME_STR) _T(" v. ") VER_FILE_VERSION_STR_;
 TCHAR szWindowClass[MAX_LOADSTRING] = _T("2DTestWindowClass");
 
 HWND g_hwndLastFocus;

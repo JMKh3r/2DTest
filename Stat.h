@@ -2,9 +2,9 @@
 
 #include "stdafx.h"
 
-#define STAT_DATA_LEN_P_2   5    // 32 элемента
+//#define STAT_DATA_LEN_P_2   5    // 32 элемента
 //#define STAT_DATA_LEN_P_2   4    // 16 элементов
-//#define STAT_DATA_LEN_P_2   3    // 8 элементов
+#define STAT_DATA_LEN_P_2   3    // 8 элементов
 
 
 
