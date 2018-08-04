@@ -20,11 +20,11 @@
 
 
 #define VERSION_MAJOR               1
-#define VERSION_MINOR               2
-#define VERSION_REVISION            1
+#define VERSION_MINOR               3
+#define VERSION_REVISION            0
 #define VERSION_BUILD               0
 
-#define VER_FILE_DESCRIPTION_STR    "2DTest Application"
+#define VER_FILE_DESCRIPTION_STR    "2DTest Application (specifically for demonstration of RADEON drivers 2D bug)"
 
 #define VER_FILE_VERSION            VERSION_MAJOR, VERSION_MINOR, VERSION_REVISION, VERSION_BUILD
 #define VER_FILE_VERSION_STR        STRINGIZE(VERSION_MAJOR)        \
@@ -35,7 +35,7 @@
                                     _T(".") _T(STRINGIZE(VERSION_MINOR))    \
                                     _T(".") _T(STRINGIZE(VERSION_REVISION)) \
                                     _T(".") _T(STRINGIZE(VERSION_BUILD))
-#define VER_PRODUCTNAME_STR         "2DTest"
+#define VER_PRODUCTNAME_STR         "2DTest (specifically for demonstration of RADEON drivers 2D bug)"
 #define VER_PRODUCT_VERSION         VER_FILE_VERSION
 #define VER_PRODUCT_VERSION_STR     VER_FILE_VERSION_STR
 #define VER_ORIGINAL_FILENAME_STR   "2DTest.exe"

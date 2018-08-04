@@ -5,8 +5,12 @@
 
 
 
-#define Rectangle_(hdc, r) Rectangle(hdc, r.left, r.top, r.right, r.bottom)
-#define Ellipse_(hdc, r)   Ellipse(hdc, r.left, r.top, r.right, r.bottom)
+
+
+#ifdef _2_MODES
+    #define Rectangle_(hdc, r) Rectangle(hdc, r.left, r.top, r.right, r.bottom)
+    #define Ellipse_(hdc, r)   Ellipse(hdc, r.left, r.top, r.right, r.bottom)
+#endif
 #define Line_(hdc, r)   {MoveToEx(hdc, r.left, r.top, NULL); LineTo(hdc, r.right, r.bottom);}
 #define Line2_(hdc, x1, y1, x2, y2)   {MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, x2, y2);}
 #define arrlen(a) (sizeof(a)/sizeof(a[0]))
@@ -61,9 +65,9 @@
 
 HINSTANCE hInst;
 HWND hMainWnd;
-//TCHAR szTitle[MAX_LOADSTRING] = _T("2DTest");
-TCHAR szTitle[MAX_LOADSTRING] = _T(VER_PRODUCTNAME_STR) _T(" v. ") VER_FILE_VERSION_STR_;
-TCHAR szWindowClass[MAX_LOADSTRING] = _T("2DTestWindowClass");
+//const TCHAR szTitle[MAX_LOADSTRING] = _T("2DTest");
+const TCHAR szTitle[MAX_LOADSTRING] = _T(VER_PRODUCTNAME_STR) _T(" v. ") VER_FILE_VERSION_STR_;
+const TCHAR szWindowClass[MAX_LOADSTRING] = _T("2DTestWindowClass");
 
 HWND g_hwndLastFocus;
 
@@ -85,11 +89,16 @@ RECT ShapesRect =
 RECT InitWindowRect = ClientRect;
 
 bool bAllowWindowResizing = false;
+
+#ifdef _2_MODES
 enum GraphicObjects {GraphicObject_Null, GraphicObject_Lines, GraphicObject_Shapes} GraphicObject = GraphicObject_Lines;
+#endif
 
 
+#ifdef _2_MODES
 RECT Rects[RECTS_COUNT];
 RECT Ellipses[ELLIPSES_COUNT];
+#endif
 RECT Lines[LINES_COUNT];
 
 
@@ -181,21 +190,23 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     hInst = hInstance;
 
-   if (!AdjustWindowRect(&InitWindowRect, WS_OVERLAPPEDWINDOW, FALSE)) return FALSE;
+    if (!AdjustWindowRect(&InitWindowRect, WS_OVERLAPPEDWINDOW, FALSE)) return FALSE;
+    
+    hMainWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW, WINDOW_LEFT, WINDOW_TOP, InitWindowRect.right, InitWindowRect.bottom, NULL, NULL, hInstance, NULL);
+    if (!hMainWnd) return FALSE;
+    
+    if (!CreateWindow(_T("BUTTON"), _T("Reset statistics"), WS_CHILD | WS_TABSTOP | WS_VISIBLE | BS_PUSHBUTTON | BS_CENTER | BS_VCENTER, RESET_BUTTON_LEFT, RESET_BUTTON_TOP, RESET_BUTTON_WIDTH, RESET_BUTTON_HEIGHT, hMainWnd, (HMENU)IDC_RESET_BUTTON, hInstance, NULL)) return FALSE;
+    if (!CreateWindow(_T("BUTTON"), _T("Allow window resizing"), WS_CHILD | WS_TABSTOP | WS_VISIBLE | BS_AUTOCHECKBOX, CONTROLS_LEFT, CHECKBOX_TOP, CHECKBOX_WIDTH, CHECKBOX_HEIGHT, hMainWnd, (HMENU)IDC_CHECKBOX, hInstance, NULL)) return FALSE;
+    #ifdef _2_MODES
+    if (!CreateWindow(_T("BUTTON"), _T("Shapes"), WS_CHILD | WS_TABSTOP | WS_VISIBLE | BS_AUTORADIOBUTTON, CONTROLS_LEFT,                       RADIOBTN_TOP, RADIOBTN1_WIDTH, RADIOBTN1_HEIGHT, hMainWnd, (HMENU)IDC_RADIOBTN_SHAPES, hInstance, NULL)) return FALSE;
+    if (!CreateWindow(_T("BUTTON"), _T("Lines"),  WS_CHILD | WS_TABSTOP | WS_VISIBLE | BS_AUTORADIOBUTTON, CONTROLS_LEFT + RADIOBTN1_WIDTH + 8, RADIOBTN_TOP, RADIOBTN2_WIDTH, RADIOBTN2_HEIGHT, hMainWnd, (HMENU)IDC_RADIOBTN_LINES, hInstance, NULL)) return FALSE;
+    CheckDlgButton(hMainWnd, IDC_RADIOBTN_LINES, BST_CHECKED);
+    #endif
+    
+    ShowWindow(hMainWnd, nCmdShow);
+    UpdateWindow(hMainWnd);
 
-   hMainWnd = CreateWindow(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW, WINDOW_LEFT, WINDOW_TOP, InitWindowRect.right, InitWindowRect.bottom, NULL, NULL, hInstance, NULL);
-   if (!hMainWnd) return FALSE;
-
-   if (!CreateWindow(_T("BUTTON"), _T("Reset statistics"), WS_CHILD | WS_TABSTOP | WS_VISIBLE | BS_PUSHBUTTON | BS_CENTER | BS_VCENTER, RESET_BUTTON_LEFT, RESET_BUTTON_TOP, RESET_BUTTON_WIDTH, RESET_BUTTON_HEIGHT, hMainWnd, (HMENU)IDC_RESET_BUTTON, hInstance, NULL)) return FALSE;
-   if (!CreateWindow(_T("BUTTON"), _T("Allow window resizing"), WS_CHILD | WS_TABSTOP | WS_VISIBLE | BS_AUTOCHECKBOX, CONTROLS_LEFT, CHECKBOX_TOP, CHECKBOX_WIDTH, CHECKBOX_HEIGHT, hMainWnd, (HMENU)IDC_CHECKBOX, hInstance, NULL)) return FALSE;
-   if (!CreateWindow(_T("BUTTON"), _T("Shapes"), WS_CHILD | WS_TABSTOP | WS_VISIBLE | BS_AUTORADIOBUTTON, CONTROLS_LEFT,                       RADIOBTN_TOP, RADIOBTN1_WIDTH, RADIOBTN1_HEIGHT, hMainWnd, (HMENU)IDC_RADIOBTN_SHAPES, hInstance, NULL)) return FALSE;
-   if (!CreateWindow(_T("BUTTON"), _T("Lines"),  WS_CHILD | WS_TABSTOP | WS_VISIBLE | BS_AUTORADIOBUTTON, CONTROLS_LEFT + RADIOBTN1_WIDTH + 8, RADIOBTN_TOP, RADIOBTN2_WIDTH, RADIOBTN2_HEIGHT, hMainWnd, (HMENU)IDC_RADIOBTN_LINES, hInstance, NULL)) return FALSE;
-   CheckDlgButton(hMainWnd, IDC_RADIOBTN_LINES, BST_CHECKED);
-
-   ShowWindow(hMainWnd, nCmdShow);
-   UpdateWindow(hMainWnd);
-
-   return TRUE;
+    return TRUE;
 }
 
 
@@ -229,6 +240,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 RecalcShapes(hWnd);
                 break;
 
+            #ifdef _2_MODES
             case IDC_RADIOBTN_SHAPES:
             case IDC_RADIOBTN_LINES:
                 GraphicObjects NewGraphicObject = GraphicObject_Null;
@@ -248,6 +260,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     DrawShapes(hWnd);
                 }
                 break;
+            #endif
             }
 
             if (ClearText)
@@ -327,15 +340,19 @@ void DrawDurations(HDC hdc)
 
     SetBkColor(hdc, GetSysColor(COLOR_BTNFACE));
 
+    #ifdef _2_MODES
     switch (GraphicObject)
     {
     case GraphicObject_Lines:
+    #endif
 
         _tcscpy_s(Str1, _T("Line drawing time:"));
         TextOut(hdc, SURFACE_MARGIN, SURFACE_MARGIN, Str1, _tcslen(Str1));
         _sntprintf_s(Str1, _countof(Str1), _T("%.6f"), Stat3.Avg());
         _tcscat_s(Str1, _T(" msec    "));
         TextOut(hdc, STAT_VALUES_LEFT, SURFACE_MARGIN, Str1, _tcslen(Str1));
+
+    #ifdef _2_MODES
         break;
 
     case GraphicObject_Shapes:
@@ -365,6 +382,7 @@ void DrawDurations(HDC hdc)
         TextOut(hdc, STAT_VALUES_LEFT, SURFACE_MARGIN*2+3*STAT_VALUE_LINE_HEIGHT, Str1, _tcslen(Str1));
         break;
     }
+    #endif
 }
 
 
@@ -385,6 +403,7 @@ void DrawShapes(HWND hWnd)
 
     if (!(hdc = GetDC(hWnd))) return;
 
+    #ifdef _2_MODES
     switch (GraphicObject)
     {
     case GraphicObject_Null:
@@ -392,6 +411,7 @@ void DrawShapes(HWND hWnd)
         break;
 
     case GraphicObject_Lines:
+    #endif
 
         SelectObject(hdc, GetStockObject(DC_PEN));
         FillRect(hdc, &ShapesRect, (HBRUSH) (COLOR_WINDOW+1));
@@ -413,6 +433,7 @@ void DrawShapes(HWND hWnd)
 
         DrawDurations(hdc);
 
+    #ifdef _2_MODES
         break;
 
     case GraphicObject_Shapes:
@@ -452,6 +473,7 @@ void DrawShapes(HWND hWnd)
 
         break;
     }
+    #endif
 
     ReleaseDC(hWnd, hdc);
 
@@ -478,6 +500,8 @@ void RecalcShapes(const HWND hWnd, bool Forced)
         int w = ShapesRect.right - ShapesRect.left;
         int h = ShapesRect.bottom - ShapesRect.top;
         int i;
+
+        #ifdef _2_MODES
         for (i = 0; i < RECTS_COUNT; i++)
         {
             Rects[i].left   = ShapesRect.left + SrcRects[i].left * w / SHAPES_SURFACE_WIDTH;
@@ -492,6 +516,7 @@ void RecalcShapes(const HWND hWnd, bool Forced)
             Ellipses[i].top    = ShapesRect.top + SrcEllipses[i].top * h / SHAPES_SURFACE_HEIGHT;
             Ellipses[i].bottom = ShapesRect.top + SrcEllipses[i].bottom * h / SHAPES_SURFACE_HEIGHT;
         }
+        #endif
         for (i = 0; i < LINES_COUNT; i++)
         {
             Lines[i].left   = ShapesRect.left + SrcLines[i].left * w / SHAPES_SURFACE_WIDTH;
